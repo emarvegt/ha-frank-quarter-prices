@@ -1,17 +1,20 @@
-# Frank Energie Quarter-Hour Prices for Home Assistant
+# Frank Energie Quarter-Hour Prices for Home Assistant — fork with gas prices
 
 [🇳🇱 Nederlands](README.md) | 🇬🇧 English
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/default)
-[![GitHub release](https://img.shields.io/github/v/release/Bennie-JC/ha-frank-quarter-prices?display_name=tag&sort=semver&color=blue)](https://github.com/Bennie-JC/ha-frank-quarter-prices/releases/latest)
-[![HACS validation](https://github.com/Bennie-JC/ha-frank-quarter-prices/actions/workflows/hacs.yml/badge.svg)](https://github.com/Bennie-JC/ha-frank-quarter-prices/actions/workflows/hacs.yml)
-[![Hassfest](https://github.com/Bennie-JC/ha-frank-quarter-prices/actions/workflows/hassfest.yml/badge.svg)](https://github.com/Bennie-JC/ha-frank-quarter-prices/actions/workflows/hassfest.yml)
-[![GitHub stars](https://img.shields.io/github/stars/Bennie-JC/ha-frank-quarter-prices?style=flat&color=yellow)](https://github.com/Bennie-JC/ha-frank-quarter-prices/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/Bennie-JC/ha-frank-quarter-prices?color=orange)](https://github.com/Bennie-JC/ha-frank-quarter-prices/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/Bennie-JC/ha-frank-quarter-prices?color=blueviolet)](https://github.com/Bennie-JC/ha-frank-quarter-prices/commits/main)
+**This repository, [emarvegt/ha-frank-quarter-prices](https://github.com/emarvegt/ha-frank-quarter-prices), is a fork of [Bennie-JC/ha-frank-quarter-prices](https://github.com/Bennie-JC/ha-frank-quarter-prices).**
+
+The original integration and documentation were created by **Bennie ([@Bennie-JC](https://github.com/Bennie-JC))** and the upstream contributors. Full credit for that foundation belongs to them. This fork builds on their work and adds gas pricing support; changes here are maintained separately.
+
+[![HACS custom repository](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/emarvegt/ha-frank-quarter-prices)
+[![HACS validation](https://github.com/emarvegt/ha-frank-quarter-prices/actions/workflows/hacs.yml/badge.svg)](https://github.com/emarvegt/ha-frank-quarter-prices/actions/workflows/hacs.yml)
+[![Hassfest](https://github.com/emarvegt/ha-frank-quarter-prices/actions/workflows/hassfest.yml/badge.svg)](https://github.com/emarvegt/ha-frank-quarter-prices/actions/workflows/hassfest.yml)
+[![GitHub stars](https://img.shields.io/github/stars/emarvegt/ha-frank-quarter-prices?style=flat&color=yellow)](https://github.com/emarvegt/ha-frank-quarter-prices/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/emarvegt/ha-frank-quarter-prices?color=orange)](https://github.com/emarvegt/ha-frank-quarter-prices/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/emarvegt/ha-frank-quarter-prices?color=blueviolet)](https://github.com/emarvegt/ha-frank-quarter-prices/commits/main)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.1%2B-blue.svg)](https://www.home-assistant.io/)
-[![Maintained](https://img.shields.io/maintenance/yes/2026.svg)](https://github.com/Bennie-JC/ha-frank-quarter-prices)
+[![Maintained](https://img.shields.io/maintenance/yes/2026.svg)](https://github.com/emarvegt/ha-frank-quarter-prices)
 
 **Frank Energie Quarter-Hour Prices** is an unofficial Home Assistant **custom integration** for **Frank Energie's dynamic electricity prices** on a **15-minute basis** — the raw quarter-hour resolution as published by Frank Energie itself, not an hourly average.
 
@@ -19,7 +22,7 @@ The integration provides the full quarter-hour prices for **today** and, once pu
 
 It also provides the **current all-in gas price**, including VAT, sourcing markup and energy tax, in EUR/m³ for NL or EUR/kWh for BE.
 
-The integration is included in **HACS Default**, so it's directly searchable and installable through HACS without adding a custom repository.
+Install **this fork** through HACS as a custom repository using `https://github.com/emarvegt/ha-frank-quarter-prices` to get the version with gas prices.
 
 > This integration reads the public Frank Energie GraphQL API and exposes today's and tomorrow's prices, the current price, and the cheapest and most expensive price window of each day. The active quarter-hour price is recalculated on every real quarter-hour boundary (`:00`/`:15`/`:30`/`:45`); the daily price series themselves are cached locally and only fetched when missing. The full price series are available as sensor attributes for your own EMS logic, battery control, and dynamic electricity tariffs.
 
@@ -66,7 +69,7 @@ The integration is included in **HACS Default**, so it's directly searchable and
 - 🏷️ **Price zones** — today's longest contiguous cheap and expensive period, with start/end sensors (real timestamps) and binary sensors telling you whether you are inside that period right now. Both margins are configurable (15% by default).
 - 🎯 **Optimal periods** (optional, off by default) — the cheapest or most expensive contiguous period of **exactly** the duration you set (120 minutes, say), for today *and* tomorrow. Ideal for running a washing machine, heat pump or home battery at the best possible moment.
 - 🗂️ **Full price series** for today and tomorrow as sensor attributes — ideal as a data source for an EMS.
-- 📦 **HACS Default** — directly searchable and installable within HACS, no custom repository needed.
+- 📦 **HACS custom repository** — install this fork through `emarvegt/ha-frank-quarter-prices`.
 - 🔁 **Robust updates** — if tomorrow's data isn't available yet, the integration never breaks; the sensors simply stay unavailable until publication.
 - 🌍 **NL as default with optional BE support** via the `x-country` header.
 - 🛠️ **Diagnostics support** for easy troubleshooting (secrets are redacted).
@@ -76,24 +79,24 @@ The integration is included in **HACS Default**, so it's directly searchable and
 
 ## Installation
 
+Install **emarvegt/ha-frank-quarter-prices** to use this fork with gas pricing support. The integration keeps the name **Frank Quarter Prices**, so check the repository owner when downloading.
+
 ### HACS installation (recommended)
 
-This integration is included in **HACS Default** and is directly searchable in HACS — adding a custom repository is not necessary.
-
-[![Open this HACS repository in your Home Assistant.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Bennie-JC&repository=ha-frank-quarter-prices&category=integration)
-
-> This button opens the repository directly in **HACS**, for **installing or updating** the custom integration. To then **configure** the integration, use the separate "Add Integration" button under [Configuration](#configuration).
-
 1. Make sure [HACS](https://hacs.xyz/) is installed.
-2. In Home Assistant, go to **HACS → Integrations**.
-3. Search for **Frank Quarter Prices** and click **Download**.
-4. **Restart Home Assistant**.
+2. Open HACS and select **⋮ → Custom repositories**.
+3. Add `https://github.com/emarvegt/ha-frank-quarter-prices` with the type **Integration**.
+4. Open **Frank Quarter Prices** from **emarvegt** and click **Download**.
+5. **Restart Home Assistant**.
+6. Add the integration through **Settings → Devices & Services → Add Integration → Frank Quarter Prices** if it is not already configured.
 
-> Don't see the integration right away? Reload the HACS cache (**HACS → ⋮ top right → Reload HACS**). As a fallback, you can also temporarily add the repository manually via **HACS → Integrations → ⋮ (top right) → Custom repositories** with the URL `https://github.com/Bennie-JC/ha-frank-quarter-prices` (category **Integration**).
+[![Open this fork in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=emarvegt&repository=ha-frank-quarter-prices&category=integration)
+
+The button opens this fork in HACS. See also the [HACS custom repository instructions](https://www.hacs.xyz/docs/faq/custom_repositories/).
 
 ### Manual installation
 
-1. Download the latest release from the [releases page](https://github.com/Bennie-JC/ha-frank-quarter-prices/releases).
+1. Download [this fork as a ZIP](https://github.com/emarvegt/ha-frank-quarter-prices/archive/refs/heads/main.zip) and extract it.
 2. Copy the `custom_components/frank_quarter_prices` folder into your Home Assistant's `config/custom_components/` folder:
    ```
    config/
@@ -170,6 +173,7 @@ For each day, the integration requests **all** electricity price blocks from Fra
 | --- | --- | --- | --- |
 | `sensor.frank_current_price` | Dynamic purchase price ("marktprijs+") of the currently active block | `market_price + market_price_tax + sourcing_markup_price` | EUR/kWh |
 | `sensor.frank_current_gas_price` | Current all-in gas price, including VAT, sourcing markup and energy tax | `total_price_eur_m3` (NL) / `total_price_eur_kwh` (BE) | EUR/m³ (NL) / EUR/kWh (BE) |
+| `sensor.frank_current_gas_market_price` | Current raw gas market price, excluding VAT, sourcing markup and energy tax | `market_price` | EUR/m³ (NL) / EUR/kWh (BE) |
 | `sensor.frank_current_return_price` | Estimated current electricity feed-in price, based on the verified Frank market-price field and the configured feed-in adjustment | calculated price | EUR/kWh |
 | `sensor.frank_cheapest_today` | Cheapest block price of the entire day today | `total_price_eur_kwh` | EUR/kWh |
 | `sensor.frank_cheapest_time_today` | Start time of the cheapest block today | `HH:MM` | — |
@@ -192,6 +196,8 @@ For each day, the integration requests **all** electricity price blocks from Fra
 ### Current gas price
 
 `sensor.frank_current_gas_price` is created automatically on the existing **Frank** device. Its numeric state is the public all-in gas tariff: `market_price + market_price_tax + sourcing_markup_price + energy_tax_price`. It uses Frank's published components without a hard-coded tax rate. Your personal contract may differ from this public tariff.
+
+`sensor.frank_current_gas_market_price` exposes only the API's raw `market_price`, excluding VAT, sourcing markup and energy tax. It uses the same active gas block and cache as the all-in sensor, with no additional API requests. Both sensors use EUR/m³ for NL and EUR/kWh for BE and become unavailable when no gas block covers the current time.
 
 The attributes `time`, `timestamp`, `end_timestamp`, `duration_minutes` and `full_block` describe the active gas interval. `full_block` includes the four price components, `per_unit`, and the total as `total_price_eur_m3` for NL or `total_price_eur_kwh` for BE. The intervals come directly from the API, so a gas tariff change within the calendar day (typically at 06:00 market time) takes effect at the correct quarter-hour boundary.
 
@@ -1016,7 +1022,7 @@ automation:
 Yes, through this independent custom integration. It exposes the public Frank Energie GraphQL market prices as Home Assistant sensors at quarter-hour resolution.
 
 **Can I install this integration through HACS?**
-Yes. The integration is in **HACS Default**, so it's directly searchable under **HACS → Integrations** — adding a custom repository isn't needed. See [Installation](#installation).
+Yes. Add **this fork** (`https://github.com/emarvegt/ha-frank-quarter-prices`) as a custom repository of type **Integration**. See [Installation](#installation).
 
 **Do I need a Frank Energie account or API token?**
 No. Market prices are public and require no authentication.
@@ -1055,7 +1061,7 @@ No, this is an independent community project. See the [disclaimer](#disclaimer).
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/Bennie-JC/ha-frank-quarter-prices/issues) or submit a pull request. For larger changes, please open an issue first to discuss what you'd like to change.
+Contributions to this fork are welcome! Feel free to open an [issue](https://github.com/emarvegt/ha-frank-quarter-prices/issues) or submit a pull request. For larger changes, please open an issue first to discuss what you'd like to change.
 
 ---
 
@@ -1066,5 +1072,7 @@ This project is **not affiliated with, endorsed by, or supported by Frank Energi
 ---
 
 ## License
+
+The original **Copyright (c) 2026 Bennie** notice and MIT license are preserved in [LICENSE](LICENSE).
 
 Distributed under the terms of the [LICENSE](LICENSE) file in this repository.

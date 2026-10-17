@@ -62,7 +62,7 @@ EXPENSIVE_ENTITIES = (EXPENSIVE_TODAY, EXPENSIVE_TOMORROW, EXPENSIVE_NOW)
 ALL_OPTIMAL_ENTITIES = CHEAP_ENTITIES + EXPENSIVE_ENTITIES
 
 # The default entity set, including gas, shared by every scenario here.
-BASE_ENTITY_COUNT = 20
+BASE_ENTITY_COUNT = 21
 
 _CLIENT_METHOD = (
     "custom_components.frank_quarter_prices.frank_client."

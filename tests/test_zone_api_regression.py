@@ -469,7 +469,7 @@ async def test_one_coordinator_and_one_client_serve_every_entity(hass, entry, ap
             for registered in registry.entities.values()
             if registered.platform == DOMAIN
         ]
-        assert len(entity_ids) == 20  # electricity/zone entities plus gas
+        assert len(entity_ids) == 21  # electricity/zone entities plus both gas sensors
 
         coordinators = {
             id(

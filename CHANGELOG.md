@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `sensor.frank_current_gas_market_price`: raw gas market price, excluding VAT, sourcing markup and energy tax. Shares the all-in gas sensor's active block, units and cache without additional API requests.
 - `sensor.frank_current_gas_price`: current public all-in gas tariff, including VAT, sourcing markup and energy tax. Uses the replacement `marketPrices { gasPrices }` API, in EUR/m³ for NL and EUR/kWh for BE, with the active interval and price breakdown in attributes. Gas has an independent daily cache; missing gas data does not interrupt electricity sensors. No reconfiguration is required.
 
 ## [0.2.0-beta.1] - 2026-09-09

@@ -324,6 +324,17 @@ CONTRACT: dict[str, dict[str, Any]] = BASELINE | ADDED_IN_0_1_6 | {
         "attrs": _BLOCK_PRICE_ATTRS,
         "state_type": float,
     },
+    "sensor.frank_current_gas_market_price": {
+        "unique_id_suffix": "current_gas_market_price",
+        "name": "Frank Current gas market price",
+        "unit": "EUR/m³",
+        "device_class": "monetary",
+        "state_class": None,
+        "icon": None,
+        "entity_category": None,
+        "attrs": _BLOCK_PRICE_ATTRS,
+        "state_type": float,
+    },
 }
 
 # Keys of a single price block, in the order the client produces them. External
@@ -372,7 +383,7 @@ def test_the_optional_planner_entities_are_not_part_of_the_default_contract(hass
         if entity.platform == DOMAIN
     }
     assert not [entity_id for entity_id in created if "optimal" in entity_id]
-    assert len(created) == len(CONTRACT) == 20
+    assert len(created) == len(CONTRACT) == 21
 
 
 def test_v0_1_4_entities_all_still_exist(hass):

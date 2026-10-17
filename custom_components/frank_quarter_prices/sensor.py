@@ -232,6 +232,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = [
         FrankCurrentPriceSensor(coordinator),
         FrankCurrentGasPriceSensor(coordinator),
+        FrankCurrentGasMarketPriceSensor(coordinator),
         FrankCurrentReturnPriceSensor(coordinator),
         FrankPricesTodaySensor(coordinator),
         FrankPricesTomorrowSensor(coordinator),
@@ -319,22 +320,24 @@ class FrankCurrentPriceSensor(FrankQuarterPricesEntity, SensorEntity):
         return (self.coordinator.data or {}).get("current_price_block")
 
 
-class FrankCurrentGasPriceSensor(FrankQuarterPricesEntity, SensorEntity):
-    """Current all-in public gas tariff, including VAT, markup and energy tax."""
+class FrankGasPriceSensor(FrankQuarterPricesEntity, SensorEntity):
+    """A gas price component from the shared active gas block."""
 
     _attr_device_class = SensorDeviceClass.MONETARY
 
-    def __init__(self, coordinator: FrankQuarterPricesCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: FrankQuarterPricesCoordinator,
+        key: str,
+        name: str,
+        value_field: str,
+    ) -> None:
         """Initialize the gas sensor on the existing Frank device."""
-        super().__init__(coordinator, "current_gas_price", "Current gas price")
+        super().__init__(coordinator, key, name)
         self._attr_native_unit_of_measurement = (
             PRICE_UNIT_EUR_M3 if coordinator.country == COUNTRY_NL else PRICE_UNIT_EUR_KWH
         )
-        self._total_field = (
-            "total_price_eur_m3"
-            if coordinator.country == COUNTRY_NL
-            else "total_price_eur_kwh"
-        )
+        self._value_field = value_field
 
     def _current_block(self) -> dict[str, Any] | None:
         """Return the gas block covering now, never a stale expired tariff."""
@@ -342,8 +345,8 @@ class FrankCurrentGasPriceSensor(FrankQuarterPricesEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the all-in gas price in the market's native unit."""
-        return (self._current_block() or {}).get(self._total_field)
+        """Return the gas price component in the market's native unit."""
+        return (self._current_block() or {}).get(self._value_field)
 
     @property
     def available(self) -> bool:
@@ -354,6 +357,34 @@ class FrankCurrentGasPriceSensor(FrankQuarterPricesEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the active interval and all four API price components."""
         return _block_attributes(self._current_block())
+
+
+class FrankCurrentGasPriceSensor(FrankGasPriceSensor):
+    """Current all-in public gas tariff, including VAT, markup and energy tax."""
+
+    def __init__(self, coordinator: FrankQuarterPricesCoordinator) -> None:
+        """Initialize the all-in gas price sensor."""
+        super().__init__(
+            coordinator,
+            "current_gas_price",
+            "Current gas price",
+            "total_price_eur_m3"
+            if coordinator.country == COUNTRY_NL
+            else "total_price_eur_kwh",
+        )
+
+
+class FrankCurrentGasMarketPriceSensor(FrankGasPriceSensor):
+    """Raw gas market price, excluding VAT, markup and energy tax."""
+
+    def __init__(self, coordinator: FrankQuarterPricesCoordinator) -> None:
+        """Initialize the raw gas market price sensor."""
+        super().__init__(
+            coordinator,
+            "current_gas_market_price",
+            "Current gas market price",
+            MARKET_PRICE_FIELD,
+        )
 
 
 class FrankCurrentReturnPriceSensor(FrankQuarterPricesEntity, SensorEntity):
