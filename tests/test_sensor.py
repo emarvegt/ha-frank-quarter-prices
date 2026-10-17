@@ -20,6 +20,7 @@ EXPENSIVE_ZONE_START = "sensor.frank_expensive_zone_start_today"
 # All entities the integration is expected to create (regression guard).
 EXPECTED_ENTITIES = {
     "sensor.frank_current_price",
+    "sensor.frank_current_gas_price",
     "sensor.frank_current_return_price",
     "sensor.frank_prices_today",
     "sensor.frank_prices_tomorrow",

@@ -176,6 +176,38 @@ def build_day(day, market_price: float | None = None) -> dict[str, Any]:
     return {"prices": build_local_day_blocks(day, market_price)}
 
 
+def build_gas_day(day, unit: str = "M3") -> list[dict[str, Any]]:
+    """Build calendar-day gas blocks, changing tariff at 06:00 market time."""
+    blocks = build_local_day_blocks(day)
+    for block in blocks:
+        market = 0.85 if block["from"].hour < 6 else 0.86
+        if unit == "KWH":
+            market /= 10
+        block.update(
+            market_price=market,
+            market_price_tax=round(market * 0.21, 6),
+            sourcing_markup_price=0.07986,
+            energy_tax_price=0.7268,
+            per_unit=unit,
+        )
+        del block["total_price_eur_kwh"]
+        block["total_price_eur_m3" if unit == "M3" else "total_price_eur_kwh"] = round(
+            market + block["market_price_tax"] + 0.07986 + 0.7268, 6
+        )
+    return blocks
+
+
+@pytest.fixture(autouse=True)
+def mock_gas_client():
+    """Keep gas requests offline independently of electricity test scenarios."""
+    with patch(
+        "custom_components.frank_quarter_prices.frank_client."
+        "FrankClient.async_get_gas_prices_for_date",
+        AsyncMock(side_effect=build_gas_day),
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture
 def mock_config_entry():
     """Return a mock config entry for the NL integration."""

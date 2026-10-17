@@ -2,14 +2,15 @@
 
 This client talks to the public Frank Energie GraphQL endpoint, which does not
 require authentication for market prices. It fetches the quarter-hourly
-electricity prices for a given date and normalizes them into a stable structure
-that the rest of the integration consumes.
+electricity and gas prices for a given date and normalizes them into a stable
+structure that the rest of the integration consumes.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from datetime import date as date_type
 from datetime import datetime
 from typing import Any
@@ -63,6 +64,9 @@ query MarketPrices($date: String!, $resolution: PriceResolution!) {
   }
 }
 """
+
+# Keep gas separate so missing gas data cannot invalidate electricity prices.
+GAS_PRICES_QUERY = MARKET_PRICES_QUERY.replace("electricityPrices", "gasPrices")
 
 # Delay (seconds) between retry attempts.
 RETRY_BACKOFF = 2
@@ -120,6 +124,43 @@ class FrankClient:
         self._log_price_summary(target_date, prices)
 
         return {"prices": prices}
+
+    async def async_get_gas_prices_for_date(
+        self, target_date: date_type
+    ) -> list[dict[str, Any]]:
+        """Fetch gas blocks using the replacement public marketPrices API.
+
+        Frank returns calendar-day blocks, including the previous gas day's
+        rate before 06:00. Preserve the API intervals rather than assuming a
+        single rate per calendar day. NL is per m³; BE is per kWh.
+        """
+        data = await self._async_request(
+            {
+                "query": GAS_PRICES_QUERY,
+                "variables": {
+                    "date": target_date.isoformat(),
+                    "resolution": PRICE_RESOLUTION,
+                },
+                "operationName": "MarketPrices",
+            }
+        )
+        raw_prices = ((data.get("data") or {}).get("marketPrices") or {}).get(
+            "gasPrices"
+        )
+        if not isinstance(raw_prices, list):
+            return []
+
+        unit = "M3" if self._country == COUNTRY_NL else "KWH"
+        total_field = "total_price_eur_m3" if unit == "M3" else "total_price_eur_kwh"
+        prices = []
+        for record in raw_prices:
+            if not isinstance(record, dict) or record.get("perUnit") != unit:
+                _LOGGER.warning("Skipping gas price with unexpected unit: %r", record)
+                continue
+            normalized = self._normalize_record(record, total_field=total_field)
+            if normalized is not None:
+                prices.append(normalized)
+        return prices
 
     @staticmethod
     def _log_price_summary(
@@ -205,7 +246,9 @@ class FrankClient:
         return electricity_prices
 
     @staticmethod
-    def _normalize_record(record: Any) -> dict[str, Any] | None:
+    def _normalize_record(
+        record: Any, *, total_field: str = "total_price_eur_kwh"
+    ) -> dict[str, Any] | None:
         """Validate and normalize a single price record.
 
         Returns ``None`` when the record is invalid so the caller can skip it.
@@ -223,6 +266,17 @@ class FrankClient:
             sourcing_markup_price = float(record["sourcingMarkupPrice"])
             energy_tax_price = float(record["energyTaxPrice"])
 
+            if not all(
+                math.isfinite(value)
+                for value in (
+                    market_price,
+                    market_price_tax,
+                    sourcing_markup_price,
+                    energy_tax_price,
+                )
+            ):
+                raise ValueError("Non-finite price component")
+
             per_unit = record.get("perUnit")
             if not isinstance(per_unit, str) or not per_unit:
                 raise ValueError(f"Invalid perUnit: {per_unit!r}")
@@ -230,7 +284,11 @@ class FrankClient:
             _LOGGER.warning("Skipping invalid price record %r: %s", record, err)
             return None
 
-        if from_dt is None or till_dt is None or till_dt <= from_dt:
+        if (
+            from_dt is None
+            or till_dt is None
+            or dt_util.as_utc(till_dt) <= dt_util.as_utc(from_dt)
+        ):
             _LOGGER.warning(
                 "Skipping price record with invalid interval: from=%s till=%s",
                 record.get("from"),
@@ -238,7 +296,9 @@ class FrankClient:
             )
             return None
 
-        duration_minutes = int((till_dt - from_dt).total_seconds() // 60)
+        duration_minutes = int(
+            (dt_util.as_utc(till_dt) - dt_util.as_utc(from_dt)).total_seconds() // 60
+        )
         total_price = (
             market_price
             + market_price_tax
@@ -254,7 +314,7 @@ class FrankClient:
             "market_price_tax": market_price_tax,
             "sourcing_markup_price": sourcing_markup_price,
             "energy_tax_price": energy_tax_price,
-            "total_price_eur_kwh": round(total_price, 6),
+            total_field: round(total_price, 6),
             "per_unit": per_unit,
         }
 

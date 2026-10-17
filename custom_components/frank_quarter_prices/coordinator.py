@@ -103,6 +103,9 @@ class FrankQuarterPricesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # from this set is still fetched again: a partial response stays usable
         # for the current cycle but must never freeze in for the rest of the day.
         self._complete_days: set[date_type] = set()
+        # Gas has its own publication/cache lifecycle. A gas outage must not
+        # affect the electricity cache or the coordinator's success state.
+        self._gas_prices_by_day: dict[date_type, list[dict[str, Any]]] = {}
         # Consecutive tomorrow requests that failed with a transport/API error,
         # and when the last one happened. Used to back off a sustained outage
         # without delaying recovery from a single blip.
@@ -174,6 +177,8 @@ class FrankQuarterPricesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # 2. Tomorrow. Optional by nature: not published before the afternoon,
         #    and a failure here must never invalidate today.
         tomorrow_prices = await self._async_ensure_tomorrow(tomorrow, now)
+        gas_prices = await self._async_ensure_gas_today(today)
+        current_gas_block = self._determine_current_block(gas_prices, now)
         tomorrow_available = bool(tomorrow_prices)
         if not tomorrow_available:
             _LOGGER.debug("Tomorrow's prices not available yet")
@@ -245,6 +250,7 @@ class FrankQuarterPricesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "tomorrow_available": tomorrow_available,
             "current_price": current_price,
             "current_price_block": current_price_block,
+            "current_gas_price_block": current_gas_block,
             "resolution_minutes": resolution_minutes,
             "cheap_zone": cheap_zone,
             "expensive_zone": expensive_zone,
@@ -359,6 +365,25 @@ class FrankQuarterPricesCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for day in [day for day in self._prices_by_day if day < today]:
             del self._prices_by_day[day]
             self._complete_days.discard(day)
+        for day in [day for day in self._gas_prices_by_day if day < today]:
+            del self._gas_prices_by_day[day]
+
+    async def _async_ensure_gas_today(
+        self, day: date_type
+    ) -> list[dict[str, Any]]:
+        """Cache gas independently; retry missing/partial days on the next tick."""
+        cached = self._gas_prices_by_day.get(day, [])
+        if self._covers_full_market_day(cached, day):
+            return cached
+        try:
+            fresh = await self.client.async_get_gas_prices_for_date(day)
+        except FrankClientError as err:
+            _LOGGER.info("Gas prices unavailable for %s: %s", day, err)
+            return cached
+        if fresh := self._filter_for_day(fresh, day):
+            cached = self._merge_blocks(cached, fresh)
+            self._gas_prices_by_day[day] = cached
+        return cached
 
     def _store_day(self, day: date_type, prices: list[dict[str, Any]]) -> None:
         """Cache a fetched day, keeping the best list seen for that date.

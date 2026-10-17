@@ -144,7 +144,7 @@ async def test_five_margin_changes_leave_no_duplicates(hass, entry, api):
         freezer, _ = await setup_at(hass, entry, at(DAY, 14, 7))
         try:
             baseline_entities = zone_entity_ids(hass)
-            assert len(baseline_entities) == 19
+            assert len(baseline_entities) == 20
             setup_calls = len(api.calls)
             assert setup_calls == 2  # today + tomorrow
             per_reload_costs: list[int] = []
@@ -241,7 +241,7 @@ async def test_unload_then_setup_again_is_clean(hass, entry, api):
     freezer, _ = await setup_at(hass, entry, at(DAY, 14, 7))
     try:
         before = zone_entity_ids(hass)
-        assert len(before) == 19
+        assert len(before) == 20
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -382,7 +382,7 @@ async def test_realistic_v0_1_5_entry_upgrades_without_intervention(hass, api):
         assert CONF_EXPENSIVE_ZONE_MARGIN_PERCENT not in entry.options
         assert entry.version == 1  # no migration was triggered
 
-        assert len(zone_entity_ids(hass)) == 19
+        assert len(zone_entity_ids(hass)) == 20
         for entity_id in (CHEAP_START, EXPENSIVE_START):
             attrs = hass.states.get(entity_id).attributes
             assert attrs["margin_percent"] == 15.0

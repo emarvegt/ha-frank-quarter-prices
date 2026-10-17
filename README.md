@@ -23,6 +23,8 @@ De integratie levert de volledige kwartierprijzen voor **vandaag** en, zodra gep
 
 De integratie is opgenomen in **HACS Default** en dus rechtstreeks doorzoekbaar en installeerbaar via HACS, zonder een aangepaste repository toe te voegen.
 
+Daarnaast levert de integratie de **actuele all-in gasprijs**, inclusief btw, inkoopvergoeding en energiebelasting, in EUR/m³ voor NL of EUR/kWh voor BE.
+
 > Deze integratie leest de openbare Frank Energie GraphQL API uit en levert de prijzen van vandaag en morgen, de huidige prijs en het goedkoopste en duurste prijsvenster van elke dag. De actuele kwartierprijs wordt op iedere echte kwartiergrens (`:00`/`:15`/`:30`/`:45`) opnieuw bepaald; de dagreeksen zelf worden lokaal gecachet en alleen opgehaald wanneer ze ontbreken. De volledige prijsreeksen zijn beschikbaar als sensorattributen voor je eigen EMS-logica, batterijsturing en dynamische energietarieven.
 
 ---
@@ -175,6 +177,7 @@ Voor elke dag vraagt de integratie **alle** prijsblokken voor stroom op bij Fran
 | Entiteit | Beschrijving | Status | Eenheid |
 | --- | --- | --- | --- |
 | `sensor.frank_current_price` | Dynamische afnameprijs ("marktprijs+") van het op dit moment actieve blok | `market_price + market_price_tax + sourcing_markup_price` | EUR/kWh |
+| `sensor.frank_current_gas_price` | Actuele all-in gasprijs inclusief btw, inkoopvergoeding en energiebelasting | `total_price_eur_m3` (NL) / `total_price_eur_kwh` (BE) | EUR/m³ (NL) / EUR/kWh (BE) |
 | `sensor.frank_current_return_price` | Geschatte actuele terugleverprijs voor stroom, op basis van het geverifieerde Frank-marktprijsveld en de ingestelde teruglevercorrectie | berekende prijs | EUR/kWh |
 | `sensor.frank_cheapest_today` | Goedkoopste blokprijs van de volledige dag vandaag | `total_price_eur_kwh` | EUR/kWh |
 | `sensor.frank_cheapest_time_today` | Starttijd van het goedkoopste blok vandaag | `HH:MM` | — |
@@ -193,6 +196,16 @@ Voor elke dag vraagt de integratie **alle** prijsblokken voor stroom op bij Fran
 | `binary_sensor.frank_cheap_period` | Of het nú goedkope stroom is (binnen de goedkope prijszone) | aan/uit | — |
 | `binary_sensor.frank_expensive_period` | Of het nú dure stroom is (binnen de dure prijszone) | aan/uit | — |
 | `binary_sensor.frank_tomorrow_prices_available` | Of de prijzen voor morgen gepubliceerd zijn | aan/uit | — |
+
+### Actuele gasprijs
+
+`sensor.frank_current_gas_price` verschijnt automatisch op het bestaande apparaat **Frank**. De numerieke status is de openbare all-in gasprijs: `market_price + market_price_tax + sourcing_markup_price + energy_tax_price`. De integratie gebruikt de gepubliceerde componenten zonder een vast belastingtarief in te bouwen. Je persoonlijke contract kan afwijken van dit openbare tarief.
+
+De attributen `time`, `timestamp`, `end_timestamp`, `duration_minutes` en `full_block` beschrijven het actieve gasinterval. `full_block` bevat de vier prijscomponenten, `per_unit` en het totaal als `total_price_eur_m3` voor NL of `total_price_eur_kwh` voor BE. De intervallen komen rechtstreeks uit de API, zodat een tariefwisseling binnen de kalenderdag (doorgaans om 06:00 markttijd) op de juiste kwartiergrens ingaat.
+
+Gasprijzen worden afzonderlijk opgehaald via `marketPrices { gasPrices { ... } }`, met hetzelfde openbare endpoint en dezelfde landheader. Een volledige marktdag wordt gecachet; ontbrekende of onvolledige data wordt bij volgende kwartierupdates opnieuw opgevraagd. Om middernacht wordt de volgende kalenderdag opgehaald. Ontbrekende gasprijzen maken alleen de gassensor onbeschikbaar; de stroomsensoren blijven werken. Na een update is geen nieuwe configuratie nodig: herlaad de integratie of herstart Home Assistant.
+
+Bij een gasmeter in m³ kun je deze sensor als **actuele gasprijs** selecteren in het Energiedashboard (NL). Het Belgische gastarief is per kWh; combineer het alleen met verbruik in kWh, of reken het verbruik afzonderlijk om met de conversiefactor van je leverancier.
 
 ### Sensoren goedkoopste / duurste prijsvenster
 

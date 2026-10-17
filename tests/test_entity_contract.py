@@ -311,8 +311,20 @@ ADDED_IN_0_1_6: dict[str, dict[str, Any]] = {
     },
 }
 
-# The complete v0.1.6 entity contract.
-CONTRACT: dict[str, dict[str, Any]] = BASELINE | ADDED_IN_0_1_6
+# The current entity contract: all existing electricity entities plus gas.
+CONTRACT: dict[str, dict[str, Any]] = BASELINE | ADDED_IN_0_1_6 | {
+    "sensor.frank_current_gas_price": {
+        "unique_id_suffix": "current_gas_price",
+        "name": "Frank Current gas price",
+        "unit": "EUR/m³",
+        "device_class": "monetary",
+        "state_class": None,
+        "icon": None,
+        "entity_category": None,
+        "attrs": _BLOCK_PRICE_ATTRS,
+        "state_type": float,
+    },
+}
 
 # Keys of a single price block, in the order the client produces them. External
 # consumers index these directly out of the ``prices`` array.
@@ -335,7 +347,7 @@ def _integration_attrs(state) -> set[str]:
 
 
 def test_no_entity_is_missing_or_extra(hass):
-    """The integration creates exactly the v0.1.6 set of entities."""
+    """The integration creates exactly the default electricity and gas entities."""
     registry = er.async_get(hass)
     created = {
         entity.entity_id
@@ -360,7 +372,7 @@ def test_the_optional_planner_entities_are_not_part_of_the_default_contract(hass
         if entity.platform == DOMAIN
     }
     assert not [entity_id for entity_id in created if "optimal" in entity_id]
-    assert len(created) == len(CONTRACT) == 19
+    assert len(created) == len(CONTRACT) == 20
 
 
 def test_v0_1_4_entities_all_still_exist(hass):

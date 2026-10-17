@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `sensor.frank_current_gas_price`: current public all-in gas tariff, including VAT, sourcing markup and energy tax. Uses the replacement `marketPrices { gasPrices }` API, in EUR/m³ for NL and EUR/kWh for BE, with the active interval and price breakdown in attributes. Gas has an independent daily cache; missing gas data does not interrupt electricity sensors. No reconfiguration is required.
+
 ## [0.2.0-beta.1] - 2026-09-09
 
 > **Beta / pre-release.** This release changes the meaning of an existing sensor. Install it to help validate the new price basis, and compare your Home Assistant Energy Dashboard totals against the Frank Energie app before a stable release follows.

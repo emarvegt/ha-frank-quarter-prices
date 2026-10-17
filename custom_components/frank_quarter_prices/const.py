@@ -105,6 +105,7 @@ MINUTES_UNIT: Final = "min"
 
 # Shared price unit for the monetary sensors.
 PRICE_UNIT_EUR_KWH: Final = "EUR/kWh"
+PRICE_UNIT_EUR_M3: Final = "EUR/m³"
 PERCENT_UNIT: Final = "%"
 
 # Frank Energie GraphQL API.

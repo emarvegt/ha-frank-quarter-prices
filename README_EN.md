@@ -17,6 +17,8 @@
 
 The integration provides the full quarter-hour prices for **today** and, once published, **tomorrow**, together with the current purchase price, the current feed-in price, the cheapest and most expensive price window of the day, and today's configurable **cheap and expensive price zone**. The sensors are ready to use in **dashboards**, **automations**, for **home batteries**, and in your own **Energy Management System (EMS)** — well suited for anyone acting on **dynamic electricity prices**.
 
+It also provides the **current all-in gas price**, including VAT, sourcing markup and energy tax, in EUR/m³ for NL or EUR/kWh for BE.
+
 The integration is included in **HACS Default**, so it's directly searchable and installable through HACS without adding a custom repository.
 
 > This integration reads the public Frank Energie GraphQL API and exposes today's and tomorrow's prices, the current price, and the cheapest and most expensive price window of each day. The active quarter-hour price is recalculated on every real quarter-hour boundary (`:00`/`:15`/`:30`/`:45`); the daily price series themselves are cached locally and only fetched when missing. The full price series are available as sensor attributes for your own EMS logic, battery control, and dynamic electricity tariffs.
@@ -59,6 +61,7 @@ The integration is included in **HACS Default**, so it's directly searchable and
 - ⚡ **Quarter-hour prices** — full 15-minute market price resolution (with automatic fallback to 60-minute data when that's what Frank Energie publishes).
 - 📅 **Today & tomorrow** — both days are fetched automatically and cached locally; tomorrow's prices appear as soon as they're published (typically between 13:00 and 14:00 market-local time).
 - 💶 **Current price sensor** — the currently active price block, with the full price breakdown as attributes.
+- 🔥 **Current gas price** — the all-in gas tariff with its API price breakdown and validity interval; no account required.
 - 📉 Sensors for the **cheapest and most expensive** price window (price + start time) for the **entire day**, for both today and tomorrow.
 - 🏷️ **Price zones** — today's longest contiguous cheap and expensive period, with start/end sensors (real timestamps) and binary sensors telling you whether you are inside that period right now. Both margins are configurable (15% by default).
 - 🎯 **Optimal periods** (optional, off by default) — the cheapest or most expensive contiguous period of **exactly** the duration you set (120 minutes, say), for today *and* tomorrow. Ideal for running a washing machine, heat pump or home battery at the best possible moment.
@@ -166,6 +169,7 @@ For each day, the integration requests **all** electricity price blocks from Fra
 | Entity | Description | State | Unit |
 | --- | --- | --- | --- |
 | `sensor.frank_current_price` | Dynamic purchase price ("marktprijs+") of the currently active block | `market_price + market_price_tax + sourcing_markup_price` | EUR/kWh |
+| `sensor.frank_current_gas_price` | Current all-in gas price, including VAT, sourcing markup and energy tax | `total_price_eur_m3` (NL) / `total_price_eur_kwh` (BE) | EUR/m³ (NL) / EUR/kWh (BE) |
 | `sensor.frank_current_return_price` | Estimated current electricity feed-in price, based on the verified Frank market-price field and the configured feed-in adjustment | calculated price | EUR/kWh |
 | `sensor.frank_cheapest_today` | Cheapest block price of the entire day today | `total_price_eur_kwh` | EUR/kWh |
 | `sensor.frank_cheapest_time_today` | Start time of the cheapest block today | `HH:MM` | — |
@@ -184,6 +188,16 @@ For each day, the integration requests **all** electricity price blocks from Fra
 | `binary_sensor.frank_cheap_period` | Whether electricity is cheap right now (inside the cheap price zone) | on/off | — |
 | `binary_sensor.frank_expensive_period` | Whether electricity is expensive right now (inside the expensive price zone) | on/off | — |
 | `binary_sensor.frank_tomorrow_prices_available` | Whether tomorrow's prices have been published | on/off | — |
+
+### Current gas price
+
+`sensor.frank_current_gas_price` is created automatically on the existing **Frank** device. Its numeric state is the public all-in gas tariff: `market_price + market_price_tax + sourcing_markup_price + energy_tax_price`. It uses Frank's published components without a hard-coded tax rate. Your personal contract may differ from this public tariff.
+
+The attributes `time`, `timestamp`, `end_timestamp`, `duration_minutes` and `full_block` describe the active gas interval. `full_block` includes the four price components, `per_unit`, and the total as `total_price_eur_m3` for NL or `total_price_eur_kwh` for BE. The intervals come directly from the API, so a gas tariff change within the calendar day (typically at 06:00 market time) takes effect at the correct quarter-hour boundary.
+
+Gas prices are fetched separately through `marketPrices { gasPrices { ... } }`, using the same public endpoint and country header. A complete market day is cached; incomplete or missing data is retried on subsequent quarter-hour updates. At midnight, the next calendar day is fetched. Missing gas data makes only the gas sensor unavailable, while electricity sensors continue to work. No configuration change is needed after upgrading; reload the integration or restart Home Assistant.
+
+For a gas meter measured in m³, select this sensor as the **current gas price** in the Energy Dashboard (NL). The Belgian gas tariff is per kWh; only combine it with consumption measured in kWh, or convert consumption separately using your supplier's conversion factor.
 
 ### Cheapest / most expensive price window sensors
 
